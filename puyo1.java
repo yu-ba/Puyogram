@@ -75,6 +75,9 @@ public class puyo1
 	static boolean lock = false;
 	static boolean lock2 = false;
 
+	static Panel nextpanel[];
+	static int nextColor[];
+
 	static Panel rotateBtn;
 	static Panel leftBtn;
 	static Panel rightBtn;
@@ -113,6 +116,12 @@ public class puyo1
 		mypanels = new Panel[13][8];
 		puyomatrix = new int[13][8];
 		colorList = new Color[5];
+
+		nextpanel = new Panel[2];
+		nextColor = new int[2];
+		nextColor[0] = (int)(Math.random()*3)+2;
+		nextColor[1] = (int)(Math.random()*3)+2;
+
 		colorList[0] = Color.gray;
 		colorList[1] = Color.white;
 		colorList[2] = Color.yellow;
@@ -139,7 +148,17 @@ public class puyo1
 			setpuyo(0,y,1); // wall is here
 			setpuyo(7,y,1); // wall is here
 		}
-
+		
+		for(y = 0; y < 2; y++)
+		{
+			Panel p = new YPanel();
+			nextpanel[y] = p;
+			myframe.add(p);
+			p.setBounds(30 + puyoSize*8 + 10,
+						40 + puyoSize*y,
+						puyoSize,
+						puyoSize);
+		}
 		rotateBtn.addMouseListener(new MouseAdapter() 
 				{
 				public void mouseReleased(MouseEvent e) 
@@ -165,6 +184,8 @@ public class puyo1
 		boolean firstPlacing = true;
 		boolean gameIsOver = false;
 		int fallCount = 0;
+
+		
 		while( gameIsOver != true) 
 		{//{{{
 			lock = false;
@@ -175,18 +196,20 @@ public class puyo1
 			if( firstPlacing ) 
 			{
 				firstPlacing = false;
-				color1 = (int)(Math.random()*3)+2;
-				color2 = (int)(Math.random()*3)+2;
+				color1=nextColor[0];
+				color2=nextColor[1];
 				rotate = 0;
 				puyoX = 3; puyoY = 1; // initialPlace
 				puyoX2 = getRotatedPositionX(puyoX,rotate);
 				puyoY2 = getRotatedPositionY(puyoY,rotate);
-				if( puyomatrix[puyoY][puyoX] == 0
-						&& puyomatrix[puyoY2][puyoX2] == 0 ) 
+				if( getpuyo(puyoX,puyoY) == 0
+						&& getpuyo(puyoX2,puyoY2) == 0 ) 
 				{
 					setpuyo(puyoX,puyoY,color1);
 					setpuyo(puyoX2,puyoY2,color2);
 					// System.out.print("next puyo is here.\n");
+					setNext((int)(Math.random()*3)+2,
+							(int)(Math.random()*3)+2);
 				} else 
 				{
 					// GAME OVER
@@ -201,8 +224,8 @@ public class puyo1
 				fallCount = 0; // counter reset;
 				puyoY++; // fall it for one block
 				puyoY2++;
-				if( (rotate == 0 || puyomatrix[puyoY][puyoX] == 0)
-						&& (rotate == 2 || puyomatrix[puyoY2][puyoX2] == 0) ) 
+				if( (rotate == 0 || getpuyo(puyoX,puyoY) == 0)
+						&& (rotate == 2 || getpuyo(puyoX2,puyoY2) == 0) ) 
 				{
 					setpuyo(puyoX,puyoY-1,0);
 					setpuyo(puyoX2,puyoY2-1,0);
@@ -215,19 +238,19 @@ public class puyo1
 					puyoY--;
 					puyoY2--;
 					// fall each puyo
-					while(rotate != 0 && puyomatrix[puyoY+1][puyoX] == 0) 
+					while(rotate != 0 && getpuyo(puyoX,puyoY+1) == 0) 
 					{
 						setpuyo(puyoX,puyoY,0);
 						puyoY++;
 						setpuyo(puyoX,puyoY,color1);
 					}
-					while(puyomatrix[puyoY2+1][puyoX2] == 0) 
+					while(getpuyo(puyoX2,puyoY2+1) == 0) 
 					{
 						setpuyo(puyoX2,puyoY2,0);
 						puyoY2++;
 						setpuyo(puyoX2,puyoY2,color2);
 					}
-					while(rotate == 0 && puyomatrix[puyoY+1][puyoX] == 0) 
+					while(rotate == 0 && getpuyo(puyoX,puyoY+1) == 0) 
 					{
 						setpuyo(puyoX,puyoY,0);
 						puyoY++;
@@ -248,7 +271,6 @@ public class puyo1
 				fallCount++;
 			}
 		}//}}}
-
 	}
 	public static void rotateBtnMouseReleased(MouseEvent e) 
 	{
@@ -266,6 +288,13 @@ public class puyo1
 	{
 		puyomatrix[y][x] = color;
 		mypanels[y][x].setBackground(colorList[color]);
+	}
+	static void setNext(int color1,int color2)
+	{
+		nextColor[0] = color1;
+		nextColor[1] = color2;
+		nextpanel[0].setBackground(colorList[nextColor[0]]);
+		nextpanel[1].setBackground(colorList[nextColor[1]]);
 	}
 	static int getpuyo(int x, int y) 
 	{ // why don't you use this!?
@@ -315,7 +344,7 @@ public class puyo1
 			nr = (rotate + 1)%4;
 			nx = getRotatedPositionX(puyoX,nr);
 			ny = getRotatedPositionY(puyoY,nr);
-			if( puyomatrix[ny][nx] == 0 ) 
+			if( getpuyo(nx,ny) == 0 ) 
 			{
 				rotate = nr;
 				setpuyo(puyoX2,puyoY2,0);
@@ -335,8 +364,8 @@ public class puyo1
 		lock2 = true;
 		if(lock==false) 
 		{
-			if( (rotate == 1 || puyomatrix[puyoY][puyoX-1] == 0)
-					&& (rotate == 3 || puyomatrix[puyoY2][puyoX2-1] == 0) ) 
+			if( (rotate == 1 || getpuyo(puyoX-1,puyoY) == 0)
+					&& (rotate == 3 || getpuyo(puyoX2-1,puyoY2) == 0) ) 
 			{
 				setpuyo(puyoX,puyoY,0);
 				setpuyo(puyoX2,puyoY2,0);
@@ -357,8 +386,8 @@ public class puyo1
 		lock2 = true;
 		if(lock==false) 
 		{
-			if( (rotate == 3 || puyomatrix[puyoY][puyoX+1] == 0)
-					&& (rotate == 1 || puyomatrix[puyoY2][puyoX2+1] == 0) ) 
+			if( (rotate == 3 || getpuyo(puyoX+1,puyoY) == 0)
+					&& (rotate == 1 || getpuyo(puyoX2+1,puyoY2) == 0) ) 
 			{
 				setpuyo(puyoX,puyoY,0);
 				setpuyo(puyoX2,puyoY2,0);
@@ -417,18 +446,18 @@ public class puyo1
 		Point p;
 
 		if( x < 0 || x > 6 || y > 12 || y < 0 ) return;
-		if( puyomatrix[y][x] < 2 ) return;
+		if( getpuyo(x,y) < 2 ) return;
 
 		if( v.size() == 0 ) 
 		{
 			v.add(new Point(x,y));
-			color = puyomatrix[y][x];
+			color = getpuyo(x,y);
 		} else 
 		{
 			p = (Point)v.elementAt(0);
-			color = puyomatrix[p.y][p.x];
+			color = getpuyo(p.x,p.y);
 
-			if( color != puyomatrix[y][x] ) return; // not same color
+			if( color != getpuyo(x,y) ) return; // not same color
 
 			for( vi = 0; vi < v.size(); vi++ ) 
 			{
@@ -450,10 +479,6 @@ public class puyo1
 		getConnectedPuyosFrom(x-1,y,v);
 		getConnectedPuyosFrom(x,y-1,v);
 
-
-
-
-
 		return;
 	}
 	static void fallPuyos() 
@@ -467,9 +492,9 @@ public class puyo1
 			{
 				for( x = 1; x <= 6; x++ ) 
 				{
-					if( puyomatrix[y][x] != 0 && puyomatrix[y+1][x] == 0 ) 
+					if( getpuyo(x,y) != 0 && getpuyo(x,y+1) == 0 ) 
 					{
-						setpuyo(x,y+1,puyomatrix[y][x]); // fall the puyo
+						setpuyo(x,y+1,getpuyo(x,y)); // fall the puyo
 						setpuyo(x,y,0); // the last position should be empty
 						fallcount++; // count-up fallout counter
 					}
