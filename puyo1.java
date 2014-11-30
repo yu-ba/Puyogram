@@ -135,8 +135,7 @@ public class puyo1
 				Panel p = new YPanel();
 				mypanels[y][x] = p;
 				myframe.add(p);
-				p.setBounds(30+puyoSize*x,40+puyoSize*y,puyoSize,puyoSize);
-				setpuyo(x,y,0); // no puyo is here
+				p.setBounds(30+puyoSize*x,40+puyoSize*y,puyoSize,puyoSize); setpuyo(x,y,0); // no puyo is here
 			}
 		}
 		for( x = 0; x < 8; x++ ) 
